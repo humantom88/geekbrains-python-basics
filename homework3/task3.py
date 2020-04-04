@@ -2,7 +2,7 @@
 
 def summarize_max_couple(first, second, third):
     numbers = [first, second, third]
-    first_max = max(numbers1)
+    first_max = max(numbers)
     numbers.remove(first_max)
     second_max = max(numbers)
 

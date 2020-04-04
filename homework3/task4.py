@@ -9,12 +9,14 @@
 # Способ 1:
 def my_func(x, y):
     return x ** y
-    
+
 # Способ 2:
 def my_func_2(x, y):
     result = 1
-    for i in range(0, abs(y)):
+    loop_count = abs(y)
+    while loop_count > 0:
         result = result / x
+        loop_count = loop_count - 1
     return result
 
 try:

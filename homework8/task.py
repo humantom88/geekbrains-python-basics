@@ -73,6 +73,7 @@ class Card:
 
         self.lines = [line_1, line_2, line_3]
         self.title = title
+        random.shuffle(self.unique_numbers)
 
     def __str__(self):
         output  = f"{self.title}\n"
@@ -86,7 +87,7 @@ class Card:
     def make_unique(self):
         not_unique = True
         while not_unique:
-            new_number = random.randint(0, 90)
+            new_number = random.randint(1, 90)
             if new_number not in self.unique_numbers:
                 self.unique_numbers.append(new_number)
                 not_unique = False
@@ -97,7 +98,7 @@ class Card:
         if number == None:
             return "  "
         elif number[1] == True:
-            return "  -"
+            return " -"
         elif len(str(number[0])) == 1:
             return f" {number[0]}"
         else:
@@ -107,10 +108,23 @@ class Card:
         if number_to_check in self.unique_numbers:
             for line_idx, line in enumerate(self.lines):
                 for num_idx, number in enumerate(line):
-                    if number == number_to_check:
-                        self.lines[line_idx][num_idx][1] = True
+                    if not number is None and number[0] == number_to_check:
+                        self.lines[line_idx][num_idx] = (number[0], True)
                         return True
         return False
+
+    def flatten_numbers(self):
+        flatten_numbers = []
+        for line in self.lines:
+            for item in line:
+                flatten_numbers.append(item)
+        return flatten_numbers
+
+    def is_all_checked(self):
+        flatten_numbers = [number for number in self.flatten_numbers() if number is not None and not number[1]]
+        if (len(flatten_numbers) > 0):
+            return False
+        return True
 
 
 class Player:
@@ -122,7 +136,7 @@ class Game:
         self.players = players
         self.current_index = 0
         self.total_moves = 90
-        self.numbers = [number for number in range(0, 90)] 
+        self.numbers = [number for number in range(1, 90)]
         random.shuffle(self.numbers)
         return
 
@@ -130,21 +144,34 @@ class Game:
         game_over = False
         while not game_over:
             self.total_moves -= 1
-            print(f"Новый бочонок: {self.numbers[self.current_index]} (осталось {self.total_moves})")
+            print(f"Новый бочонок: {self.numbers[self.current_index]} (осталось {self.total_moves})\n")
             for player in self.players:
                 print(player.card)
-            
+
             users_choice = input("Зачеркнуть цифру? (y/n): ")
             if users_choice.lower() == "y":
                 result = self.players[0].card.check_number(self.numbers[self.current_index])
-                
                 if not result:
-                    print("Вы проиграли")
+                    print("Вы проиграли!")
+                    game_over = True
             else:
-                result = self.players[0].card.origin_numbers
+                result = self.players[0].card.check_number(self.numbers[self.current_index])
+                if result != False:
+                    print("Вы проиграли!")
+                    game_over = True
+            self.players[1].card.check_number(self.numbers[self.current_index])
+
+            if self.players[0].card.is_all_checked() and not self.players[1].card.is_all_checked():
+                print("Вы выиграли")
+                game_over = True
+            elif not self.players[0].card.is_all_checked() and self.players[1].card.is_all_checked():
+                print("Компьютер выиграл")
+                game_over = True
+            else:
+                pass
             
             self.current_index += 1
-            game_over = True
+            
 
 
 players_card = Card("------ Ваша карточка -----")

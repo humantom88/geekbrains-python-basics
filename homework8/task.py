@@ -60,31 +60,38 @@
 import random
 
 class Card:
-    def __init__(self, title, numbers=None):
-        if numbers == None:
-            numbers = [random.randint(0, 50) for i in range(0, 27)]
+    def __init__(self, title):
+        self.unique_numbers = []
+        line_1 = sorted([(self.make_unique(), False) for no_matter in range(0, 5)])
+        line_2 = sorted([(self.make_unique(), False) for no_matter in range(0, 5)])
+        line_3 = sorted([(self.make_unique(), False) for no_matter in range(0, 5)])
 
-        self.origin_numbers = [(number, False) for number in numbers] + [None for i in range(0, len(numbers) - 1)]
-        random.shuffle(self.origin_numbers)
+        for i in range(0, 4):
+            line_1.insert(random.choice(range(0, len(line_1))), None)
+            line_2.insert(random.choice(range(0, len(line_2))), None)
+            line_3.insert(random.choice(range(0, len(line_3))), None)
 
-        self.lines = [self.origin_numbers[0:9],
-                      self.origin_numbers[9:17],
-                      self.origin_numbers[18:27]]
-
+        self.lines = [line_1, line_2, line_3]
         self.title = title
-    
-    @property
-    def actual_numbers(self):
-        return [number[0] if number else None for number in self.origin_numbers]
 
     def __str__(self):
         output  = f"{self.title}\n"
-        output += " ".join([self.print_number(number) for number in self.origin_numbers[0:9]]) + "\n"
-        output += " ".join([self.print_number(number) for number in self.origin_numbers[9:18]]) + "\n"
-        output += " ".join([self.print_number(number) for number in self.origin_numbers[18:27]]) + "\n"
+        output += " ".join([self.print_number(number) for number in self.lines[0]]) + "\n"
+        output += " ".join([self.print_number(number) for number in self.lines[1]]) + "\n"
+        output += " ".join([self.print_number(number) for number in self.lines[2]]) + "\n"
         output += "--------------------------\n"
 
         return output
+    
+    def make_unique(self):
+        not_unique = True
+        while not_unique:
+            new_number = random.randint(0, 90)
+            if new_number not in self.unique_numbers:
+                self.unique_numbers.append(new_number)
+                not_unique = False
+                return new_number
+            else: continue
 
     def print_number(self, number):
         if number == None:
@@ -97,13 +104,12 @@ class Card:
             return str(number[0])
 
     def check_number(self, number_to_check):
-        index = self.actual_numbers.index(number_to_check)
-
-        if index is not None:
-            self.origin_numbers[index][1] = True
-
-            return True
-
+        if number_to_check in self.unique_numbers:
+            for line_idx, line in enumerate(self.lines):
+                for num_idx, number in enumerate(line):
+                    if number == number_to_check:
+                        self.lines[line_idx][num_idx][1] = True
+                        return True
         return False
 
 
@@ -120,9 +126,9 @@ class Game:
         random.shuffle(self.numbers)
         return
 
-    def make_move(self):
-        is_game_in_progress = True
-        while is_game_in_progress:
+    def run(self):
+        game_over = False
+        while not game_over:
             self.total_moves -= 1
             print(f"Новый бочонок: {self.numbers[self.current_index]} (осталось {self.total_moves})")
             for player in self.players:
@@ -130,10 +136,15 @@ class Game:
             
             users_choice = input("Зачеркнуть цифру? (y/n): ")
             if users_choice.lower() == "y":
-                self.players[0].card.check_number(self.numbers[self.current_index])
+                result = self.players[0].card.check_number(self.numbers[self.current_index])
+                
+                if not result:
+                    print("Вы проиграли")
+            else:
+                result = self.players[0].card.origin_numbers
             
             self.current_index += 1
-            is_game_in_progress = False
+            game_over = True
 
 
 players_card = Card("------ Ваша карточка -----")
@@ -144,5 +155,4 @@ computer = Player(computers_card)
 
 game = Game([player, computer])
 
-print(players_card)
-print(computers_card)
+game.run()
